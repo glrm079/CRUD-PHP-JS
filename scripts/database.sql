@@ -3,9 +3,13 @@ create database CRUD;
 use CRUD;
 
 CREATE TABLE usuario (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(120) NOT NULL,
-    idade INT NOT NULL,
-    email VARCHAR(80) NOT NULL,
-    telefone VARCHAR(15) NOT NULL
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    Nome VARCHAR(120) NOT NULL,
+    Idade INT NOT NULL,
+    Email VARCHAR(80) NOT NULL,
+    Telefone VARCHAR(15) NOT NULL
 );
+
+select * from usuario;
+
+truncate table usuario;

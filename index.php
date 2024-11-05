@@ -26,19 +26,27 @@
     }
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['enviar'])) {
-        sendDatabase();
+        $id = $_POST['id'];
+        if($id || $id > 0){
+            editaLinha();
+        }
+        else{
+            insertDatabase();
+        }
     }
 
-    function sendDatabase(){
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['excluir'])) {
+        excluiLinha();
+    }
+
+    function insertDatabase(){
         $userName = $_POST['nome'];
         $age = $_POST['idade'];
         $email = $_POST['email'];
         $phoneNumber = $_POST['telefone'];
 
         if(isset($userName) && isset($age) && isset($email) && isset($phoneNumber)){
-            // echo "<h1 class='text-center text-danger'>$userName - $age - $email - $phoneNumber</h1>";
-
-            $servidor = "localhost:3307"; //colocar o localhost aqui
+            $servidor = "localhost:3306"; //colocar o localhost aqui
             $usuario = "root"; //colcoar este usuario no banco
             $senha = "root"; //colcoar essa senha no banco
             $banco = "CRUD"; //adicionar o banco com esta informação
@@ -73,6 +81,87 @@
         }
     }
 
+    function editaLinha(){
+        $user_id = $_POST['id'];
+        $userName = $_POST['nome'];
+        $age = $_POST['idade'];
+        $email = $_POST['email'];
+        $phoneNumber = $_POST['telefone'];
+
+        if(isset($userName) && isset($age) && isset($email) && isset($phoneNumber))
+        {
+            $servidor = "localhost:3306"; //colocar o localhost aqui
+            $usuario = "root"; //colcoar este usuario no banco
+            $senha = "root"; //colcoar essa senha no banco
+            $banco = "CRUD"; //adicionar o banco com esta informação
+
+            // Cria a conexão
+            $conexao = new mysqli($servidor, $usuario, $senha, $banco);
+
+            // Verifica a conexão
+            if ($conexao->connect_error) {
+                die("Conexão falhou: " . $conexao->connect_error);
+            }
+            // echo "Conectado com sucesso";
+
+            $sql = "UPDATE Usuario SET 
+                nome = IF(LENGTH(?) = 0, nome, ?),
+                idade = IF(LENGTH(?) = 0, idade, ?),
+                email = IF(LENGTH(?) = 0, email, ?),
+                telefone = IF(LENGTH(?) = 0, telefone, ?)
+                WHERE id = ?";
+
+            $stmt = $conexao->prepare($sql);
+
+            if (!$stmt) {
+                die("Erro na preparação da declaração: " . $conexao->error);
+            }
+
+            // Vincular os parâmetros
+            $stmt->bind_param("ssiissssi", $userName, $userName, $age, $age, $email, $email, $phoneNumber, $phoneNumber, $user_id);
+
+            if ($stmt->execute()) {
+                echo json_encode(["success" => true, "message" => "Registro atualizado com sucesso."]);
+            } else {
+                echo json_encode(["success" => false, "message" => $stmt->error]);
+            }
+
+            $stmt->close();
+            $conexao->close();
+        }
+    }
+
+    function excluiLinha(){
+        $id = $_POST['user_id'];
+
+        if(isset($id))
+        {
+            $servidor = "localhost:3306"; //colocar o localhost aqui
+            $usuario = "root"; //colcoar este usuario no banco
+            $senha = "root"; //colcoar essa senha no banco
+            $banco = "CRUD"; //adicionar o banco com esta informação
+
+            $conexao = new mysqli($servidor, $usuario, $senha, $banco);
+            if ($conexao->connect_error) {
+                die(json_encode(["success" => false, "message" => "Conexão falhou: " . $conexao->connect_error]));
+            }
+        
+            $sql = "DELETE FROM usuario WHERE id = ?";
+        
+            $stmt = $conexao->prepare($sql);
+            $stmt->bind_param("i", $id);
+        
+            if ($stmt->execute()) {
+                echo json_encode(["success" => true, "message" => "Registro deletado com sucesso."]);
+            } else {
+                echo json_encode(["success" => false, "message" => $stmt->error]);
+            }
+        
+            $stmt->close();
+            $conexao->close();
+        }
+    }
+
 ?>
 
 <!DOCTYPE html>
@@ -93,6 +182,9 @@
         <form class="form" method="POST" action="" onsubmit="return validaForm()">
             <div class="container-form align-items-center">
                 <div class="input-12 form-inline">
+                    <div class="input-valido">
+                        <input type="text" id="id" placeholder="" name="id">
+                    </div>
                     <div class="form-floating mb-4 input-9">
                         <input type="text" class="form-control" id="nome" placeholder="" name="nome">
                         <label for="nome">Nome</label>
@@ -135,14 +227,14 @@
                 </thead>
                 <tbody>
                     <?php
-                        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['enviar'])) {
+                        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             loadGrid();
                         }
                         function loadGrid(){
                             // Criando um array para armazenar os objetos
                             $usuarios = [];
 
-                            $servidor = "localhost:3307"; //colocar o localhost aqui
+                            $servidor = "localhost:3306"; //colocar o localhost aqui
                             $usuario = "root"; //colcoar este usuario no banco
                             $senha = "root"; //colcoar essa senha no banco
                             $banco = "CRUD"; //adicionar o banco com esta informação
@@ -168,18 +260,7 @@
                                 echo "Nenhum resultado encontrado.";
                             }
 
-                            createTableBody($usuarios);
-                            //não sei onde colocar isso ainda...
-                            // array_push($nomes, $userName);
-                            // array_push($idades, $age);
-                            // array_push($emails, $email);
-                            // array_push($telefones, $phoneNumber);
-                        
-                            //lógica para conectar no banco novamente??...
-                            //lógica para fazer o get no banco
-                            //$dados = banco.get(); //(em json)
-                        
-                        
+                            createTableBody($usuarios);                  
                         
                             // Fecha a conexão
                             $conexao->close();
@@ -195,9 +276,17 @@
                                         <td>$usuario->telefone</td>
                                         <td>
                                             <div class='d-flex justify-content-evenly text-center'>
-                                                <form>
-                                                    <button class='btn btn-sm btn-warning' name='editar' onclick='editaLinha()'>Editar</button>
-                                                    <button class='btn btn-sm btn-danger' name='excluir' onclick='excluiLinha()'>Excluir</button>
+                                                <form onsubmit='return false'>
+                                                    <input class='input-valido' id='id$usuario->id' value='$usuario->id'>
+                                                    <input class='input-valido' id='nome$usuario->id' value='$usuario->nome'>
+                                                    <input class='input-valido' id='idade$usuario->id' value='$usuario->idade'>
+                                                    <input type='text' class='input-valido' id='email$usuario->id' value='$usuario->email'>
+                                                    <input type='text' class='input-valido' id='telefone$usuario->id' value='$usuario->telefone'>
+                                                    <button class='btn btn-sm btn-warning' name='editar' onclick='editaLinha($usuario->id)'>Editar</button>
+                                                </form>
+                                                <form method='POST'>
+                                                    <input class='input-valido' name='user_id' value='$usuario->id'>
+                                                    <button class='btn btn-sm btn-danger' name='excluir'>Excluir</button>
                                                 </form>
                                             </div> 
                                         </td>
@@ -205,45 +294,6 @@
                             }
                         }
                     ?>
-                    <!-- <tr>
-                        <td>#2</td>
-                        <th scope="row">Matheus Morais</th>
-                        <td>15</td>
-                        <td>matheus@gmail.com</td>
-                        <td>(11)9999-9999</td>
-                        <td>
-                            <div class="d-flex justify-content-evenly text-center">
-                                <button class="btn btn-sm btn-warning" name="editar" onclick="editaLinha()">Editar</button>
-                                <button class="btn btn-sm btn-danger" name="excluir" onclick="excluiLinha()">Excluir</button>
-                            </div> 
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>#3</td>
-                        <th scope="row">Matheus Morais</th>
-                        <td>15</td>
-                        <td>matheus@gmail.com</td>
-                        <td>(11)9999-9999</td>
-                        <td>
-                            <div class="d-flex justify-content-evenly text-center">
-                                <button class="btn btn-sm btn-warning" name="editar" onclick="editaLinha()">Editar</button>
-                                <button class="btn btn-sm btn-danger" name="excluir" onclick="excluiLinha()">Excluir</button>
-                            </div> 
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>#4</td>
-                        <th scope="row">Matheus Morais</th>
-                        <td>15</td>
-                        <td>matheus@gmail.com</td>
-                        <td>(11)9999-9999</td>
-                        <td>
-                            <div class="d-flex justify-content-evenly text-center">
-                                <button class="btn btn-sm btn-warning" name="editar" onclick="editaLinha()">Editar</button>
-                                <button class="btn btn-sm btn-danger" name="excluir" onclick="excluiLinha()">Excluir</button>
-                            </div> 
-                        </td>
-                    </tr> -->
                 </tbody>
             </table>
         </section>
@@ -276,7 +326,7 @@
         
             // Validar Idade
             const idade = parseInt(age.value);
-            if (!idade || idade <= 18 || idade > 120) {
+            if (!idade || idade < 18 || idade > 120) {
                 document.getElementById("idade-invalido").style.display = "block";
                 age.classList.add('input-value-invalido');
                 isValid = false;
@@ -301,7 +351,8 @@
         
             // Validar Telefone (apenas um exemplo básico)
             const telefone = phoneNumber.value.trim();
-            if (telefone.length < 10 && telefone.lenght > 13) {
+            const telefoneRegex = /^\(\d{2}\) \d{5}-\d{4}$/;
+            if (!telefoneRegex.test(telefone)) {
                 document.getElementById("telefone-invalido").style.display = "block";
                 phoneNumber.classList.add('input-value-invalido');
                 isValid = false;
@@ -314,16 +365,19 @@
             return isValid;
         }
 
-        function editaLinha(){
-            const id = document.getElementById("user_id").value;
-            
-            console.log("Editando tal linha...");
-        }
+        function editaLinha(id){
+            const user_id = document.getElementById(`id${id}`).value;
+            const nome = document.getElementById(`nome${id}`).value;
+            const idade = document.getElementById(`idade${id}`).value;
+            const email = document.getElementById(`email${id}`).value;
+            const telefone = document.getElementById(`telefone${id}`).value;
 
-        function excluiLinha(){
-            console.log("Excluindo tal linha...");
+            document.getElementById('id').value = id;            
+            document.getElementById('nome').value = nome;
+            document.getElementById('idade').value = idade;
+            document.getElementById('email').value = email;
+            document.getElementById('telefone').value = telefone;
         }
-
         function resetForm(){
             window.location.reload(true);
         }

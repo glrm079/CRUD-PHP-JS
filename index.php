@@ -1,5 +1,4 @@
 <?php
-
     class Usuario {
         // Propriedades da classe
         public $id;
@@ -58,17 +57,13 @@
             if ($conexao->connect_error) {
                 die("Conexão falhou: " . $conexao->connect_error);
             }
-            // echo "Conectado com sucesso";
 
             $sql = "INSERT INTO Usuario (nome, idade, email, telefone) VALUES (?, ?, ?, ?)";
 
             $stmt = $conexao->prepare($sql);
             $stmt->bind_param("siss", $userName, $age, $email, $phoneNumber);
                 
-            if (!$stmt->execute()) {
-                echo "Informações não inseridas... <br>Erro: " . $stmt->error;
-            }
-        
+            $stmt->execute();
             $stmt->close();
 
             // Fecha a conexão
@@ -102,7 +97,6 @@
             if ($conexao->connect_error) {
                 die("Conexão falhou: " . $conexao->connect_error);
             }
-            // echo "Conectado com sucesso";
 
             $sql = "UPDATE Usuario SET 
                 nome = IF(LENGTH(?) = 0, nome, ?),
@@ -120,11 +114,7 @@
             // Vincular os parâmetros
             $stmt->bind_param("ssiissssi", $userName, $userName, $age, $age, $email, $email, $phoneNumber, $phoneNumber, $user_id);
 
-            if ($stmt->execute()) {
-                echo json_encode(["success" => true, "message" => "Registro atualizado com sucesso."]);
-            } else {
-                echo json_encode(["success" => false, "message" => $stmt->error]);
-            }
+            $stmt->execute();
 
             $stmt->close();
             $conexao->close();
@@ -150,14 +140,9 @@
         
             $stmt = $conexao->prepare($sql);
             $stmt->bind_param("i", $id);
-        
-            if ($stmt->execute()) {
-                echo json_encode(["success" => true, "message" => "Registro deletado com sucesso."]);
-            } else {
-                echo json_encode(["success" => false, "message" => $stmt->error]);
-            }
-        
+            $stmt->execute();
             $stmt->close();
+
             $conexao->close();
         }
     }
@@ -166,20 +151,19 @@
 
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <!-- <script src="index.js" defer></script> -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <title>Teste - CRUD</title>
-</head>
-<body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="style.css">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <title>Cadastro</title>
+    </head>
+    <body>
     <header>
-        <h1>Projeto - CRUD</h1>
+        <h1>CRUD</h1>
     </header>
     <section class="formulario">
-        <form class="form" method="POST" action="" onsubmit="return validaForm()">
+        <form class="form" method="POST" onsubmit="return validaForm()">
             <div class="container-form align-items-center">
                 <div class="input-12 form-inline">
                     <div class="input-valido">
@@ -212,7 +196,7 @@
                 <button class="btn btn-danger submit" name="reset" type="reset" onclick="resetForm()">Resetar</button>
             </div>
         </form>
-        </section>
+    </section>
         <section class="container-grid">
             <table class="table table-striped-columns table-dark border-table">
                 <thead>
@@ -256,8 +240,6 @@
                                 while ($row = $resultado->fetch_assoc()) {
                                     $usuarios[] = new Usuario($row['Id'], $row['Nome'], $row['Idade'], $row['Email'], $row['Telefone']);
                                 }
-                            } else {
-                                echo "Nenhum resultado encontrado.";
                             }
 
                             createTableBody($usuarios);                  
@@ -272,7 +254,7 @@
                                         <td>$usuario->id</td>
                                         <th scope='row'>$usuario->nome</th>
                                         <td>$usuario->idade</td>
-                                        <td>$usuario->email</td>
+                                        <th scope='row'>$usuario->email</th>
                                         <td>$usuario->telefone</td>
                                         <td>
                                             <div class='d-flex justify-content-evenly text-center'>
@@ -380,13 +362,6 @@
         }
         function resetForm(){
             window.location.reload(true);
-        }
-
-        function apoio(){
-            const button = document.createElement("button");
-            button.classList.add("button"); // adicionando a classe ".button" no elemento - os estilos serão aplicados a este elemento.
-            button.innerText = 'Hello, world!';
-            document.body.appendChild(button);
         }
     </script>
 </html>

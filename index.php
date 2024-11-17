@@ -25,13 +25,17 @@
     }
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['enviar'])) {
+        insertDatabase();
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' &&  isset($_POST['editar'])) {
         $id = $_POST['id'];
-        if($id || $id > 0){
-            editaLinha();
+
+        if(!$id || $id <= 0){
+            die("Erro na requisição.");
         }
-        else{
-            insertDatabase();
-        }
+
+        editaLinha();
     }
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['excluir'])) {
@@ -45,7 +49,7 @@
         $phoneNumber = $_POST['telefone'];
 
         if(isset($userName) && isset($age) && isset($email) && isset($phoneNumber)){
-            $servidor = "localhost:3306"; //colocar o localhost aqui
+            $servidor = "localhost:3307"; //colocar o localhost aqui
             $usuario = "root"; //colcoar este usuario no banco
             $senha = "root"; //colcoar essa senha no banco
             $banco = "CRUD"; //adicionar o banco com esta informação
@@ -85,7 +89,7 @@
 
         if(isset($userName) && isset($age) && isset($email) && isset($phoneNumber))
         {
-            $servidor = "localhost:3306"; //colocar o localhost aqui
+            $servidor = "localhost:3307"; //colocar o localhost aqui
             $usuario = "root"; //colcoar este usuario no banco
             $senha = "root"; //colcoar essa senha no banco
             $banco = "CRUD"; //adicionar o banco com esta informação
@@ -126,7 +130,7 @@
 
         if(isset($id))
         {
-            $servidor = "localhost:3306"; //colocar o localhost aqui
+            $servidor = "localhost:3307"; //colocar o localhost aqui
             $usuario = "root"; //colcoar este usuario no banco
             $senha = "root"; //colcoar essa senha no banco
             $banco = "CRUD"; //adicionar o banco com esta informação
@@ -192,7 +196,8 @@
                 </div>
             </div>
             <div class="flex-row">
-                <button class="btn btn-primary submit" name="enviar">Enviar</button>
+                <button style="margin-right: 4px; display: inline;" class="btn btn-primary submit" name="enviar">Enviar</button>
+                <button style="display: none;" class="btn btn-success submit" name="editar">Atualizar</button>
                 <button class="btn btn-danger submit" name="reset" type="reset" onclick="resetForm()">Resetar</button>
             </div>
         </form>
@@ -218,7 +223,7 @@
                             // Criando um array para armazenar os objetos
                             $usuarios = [];
 
-                            $servidor = "localhost:3306"; //colocar o localhost aqui
+                            $servidor = "localhost:3307"; //colocar o localhost aqui
                             $usuario = "root"; //colcoar este usuario no banco
                             $senha = "root"; //colcoar essa senha no banco
                             $banco = "CRUD"; //adicionar o banco com esta informação
@@ -240,9 +245,13 @@
                                 while ($row = $resultado->fetch_assoc()) {
                                     $usuarios[] = new Usuario($row['Id'], $row['Nome'], $row['Idade'], $row['Email'], $row['Telefone']);
                                 }
-                            }
 
-                            createTableBody($usuarios);                  
+                                createTableBody($usuarios);
+                            }
+                            else
+                            {
+                                echo "Nenhum usuário cadastrado";
+                            }
                         
                             // Fecha a conexão
                             $conexao->close();
@@ -267,7 +276,7 @@
                                                     <button class='btn btn-sm btn-warning' name='editar' onclick='editaLinha($usuario->id)'>Editar</button>
                                                 </form>
                                                 <form method='POST'>
-                                                    <input class='input-valido' name='user_id' value='$usuario->id'>
+                                                    <input class='input-valido' name='user_id' id='user_id' value='$usuario->id'>
                                                     <button class='btn btn-sm btn-danger' name='excluir'>Excluir</button>
                                                 </form>
                                             </div> 
@@ -344,7 +353,7 @@
                 phoneNumber.classList.remove('input-value-invalido');
             }
         
-            return isValid;
+            return false;
         }
 
         function editaLinha(id){
@@ -359,9 +368,14 @@
             document.getElementById('idade').value = idade;
             document.getElementById('email').value = email;
             document.getElementById('telefone').value = telefone;
+
+            document.getElementById('enviar').style.display = "none";
+            document.getElementById('editar').style.display = "inline";
         }
+
         function resetForm(){
             window.location.reload(true);
         }
+        
     </script>
 </html>

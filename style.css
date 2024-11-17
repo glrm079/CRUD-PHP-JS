@@ -63,9 +63,15 @@ input::-webkit-inner-spin-button {
     width: 120px;
 }
 .container-grid{
-    padding: 6.5%;
-    width: 100%;    
+    padding: 5% 10%;
+    width: 100%;
+    justify-items: center;
+}
+.container-box{
+    width: 100%;
+    height: 100%;
+    background-color: white;
 }
 .border-table{    
-    border: solid black 4px;
+    border: solid black 3px;
 }

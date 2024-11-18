@@ -1,4 +1,6 @@
 <?php
+    $hasNoData = false;
+
     class Usuario {
         // Propriedades da classe
         public $id;
@@ -196,8 +198,8 @@
                 </div>
             </div>
             <div class="flex-row">
-                <button style="margin-right: 4px; display: inline;" class="btn btn-primary submit" name="enviar">Enviar</button>
-                <button style="display: none;" class="btn btn-success submit" name="editar">Atualizar</button>
+                <button style="margin-right: 4px; display: inline;" class="btn btn-primary submit" id="enviar" name="enviar">Enviar</button>
+                <button style="display: none;" class="btn btn-success submit" id="editar" name="editar">Atualizar</button>
                 <button class="btn btn-danger submit" name="reset" type="reset" onclick="resetForm()">Resetar</button>
             </div>
         </form>
@@ -206,7 +208,7 @@
             <table class="table table-striped-columns table-dark border-table">
                 <thead>
                     <tr>
-                        <th scope="col">#</th>
+                        <!-- <th scope="col">#</th> -->
                         <th scope="col">Nome</th>
                         <th scope="col">Idade</th>
                         <th scope="col">Email</th>
@@ -216,10 +218,11 @@
                 </thead>
                 <tbody>
                     <?php
-                        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                            loadGrid();
-                        }
+
+                        loadGrid();
+
                         function loadGrid(){
+                            global $hasNoData;
                             // Criando um array para armazenar os objetos
                             $usuarios = [];
 
@@ -250,7 +253,7 @@
                             }
                             else
                             {
-                                echo "Nenhum usuário cadastrado";
+                                echo "<tr><td colspan='5'><h3 class='text-center' style='color: white; align-content: center; padding: 1% 0;'>Nenhum usuário cadastrado</h3></td></tr>";
                             }
                         
                             // Fecha a conexão
@@ -259,8 +262,8 @@
 
                         function createTableBody($usuarios){
                             foreach ($usuarios as $usuario) {
+                                // "<tr>$usuario->id</tr>"
                                 echo"<tr>
-                                        <td>$usuario->id</td>
                                         <th scope='row'>$usuario->nome</th>
                                         <td>$usuario->idade</td>
                                         <th scope='row'>$usuario->email</th>
@@ -287,6 +290,7 @@
                     ?>
                 </tbody>
             </table>
+
         </section>
     </body>
     <script>
@@ -352,8 +356,8 @@
                 numberInv.style.display = "none";
                 phoneNumber.classList.remove('input-value-invalido');
             }
-        
-            return false;
+            
+            return isValid;
         }
 
         function editaLinha(id){
